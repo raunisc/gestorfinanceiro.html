@@ -1,0 +1,173 @@
+<html><head><base href=".">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestor Financeiro - Controle de Empréstimos</title>
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gestor Financeiro</h1>
+        </div>
+
+        <div class="estatisticas-section">
+            <h2>Estatísticas</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total de Dívidas</h3>
+                        <i id="icon-total-dividas" class="fas fa-eye-slash" onclick="toggleStatVisibility('total-dividas')"></i>
+                    </div>
+                    <p>R$ <span id="total-dividas" style="visibility: hidden;">0.00</span></p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Dívidas do Mês</h3>
+                        <i id="icon-total-dividas-mes" class="fas fa-eye-slash" onclick="toggleStatVisibility('total-dividas-mes')"></i>
+                    </div>
+                    <p>R$ <span id="total-dividas-mes" style="visibility: hidden;">0.00</span></p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Pago</h3>
+                        <i id="icon-total-dividas-pagas" class="fas fa-eye-slash" onclick="toggleStatVisibility('total-dividas-pagas')"></i>
+                    </div>
+                    <p>R$ <span id="total-dividas-pagas" style="visibility: hidden;">0.00</span></p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total do Mês por Credor</h3>
+                        <i id="icon-dividas-mes-credor" class="fas fa-eye-slash" onclick="toggleStatVisibility('dividas-mes-credor')"></i>
+                    </div>
+                    <div id="dividas-mes-credor" style="visibility: hidden">
+                        <!-- Content will be dynamically populated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carteira">
+            <h2>Carteira</h2>
+            <p>Saldo atual: R$ <span id="saldo">0.00</span></p>
+            <div class="form-group">
+                <label>Adicionar valor à carteira:</label>
+                <input type="number" id="valor-carteira" step="0.01" min="0" placeholder="Digite o valor" onkeypress="return isNumberOrDot(event)">
+                <button onclick="adicionarSaldo()">Adicionar</button>
+            </div>
+            <div class="carteira-history">
+                <h3>Histórico de Transações</h3>
+                <div id="historico-carteira"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Cadastrar Nova Dívida</h2>
+            <div class="form-group">
+                <label>Nome do Credor:</label>
+                <input type="text" id="credor" required="">
+            </div>
+            <div class="form-group">
+                <label>Motivo (opcional):</label>
+                <input type="text" id="motivo" placeholder="Digite o motivo da dívida">
+            </div>
+            <div class="form-group">
+                <label>Forma de Pagamento:</label>
+                <select id="forma-pagamento">
+                    <option value="cartao">Cartão</option>
+                    <option value="dinheiro">Dinheiro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Pagamento:</label>
+                <select id="tipo-pagamento" onchange="toggleParcelas()">
+                    <option value="avista">À Vista</option>
+                    <option value="parcelado">Parcelado</option>
+                </select>
+            </div>
+            <div class="form-group" id="parcelas-group" style="display: none;">
+                <label>Número de Parcelas:</label>
+                <input type="number" id="num-parcelas" min="2" value="2">
+            </div>
+            <div class="form-group">
+                <label>Valor Total:</label>
+                <input type="number" id="valor" step="0.01" min="0" required="" onkeypress="return isNumberOrDot(event)">
+            </div>
+            <div class="form-group">
+                <label>Data de Vencimento:</label>
+                <input type="date" id="vencimento" required="">
+            </div>
+            <button onclick="cadastrarDivida()">Cadastrar Dívida</button>
+        </div>
+
+        <div class="dividas-list">
+            <h2>Dívidas Cadastradas</h2>
+            <div class="filtros-container">
+                <select id="filtro-credor" onchange="atualizarListaDividas()">
+                    <option value="">Todos os credores</option>
+                </select>
+            </div>
+            <div id="lista-dividas">
+<!-- Mantido vazio, pois é dinâmico, o ajuste está no código JavaScript -->
+</div>
+        </div>
+
+        <div class="dividas-pagas">
+            <h2>Dívidas Pagas</h2>
+            <div class="filtros-container">
+                <select id="filtro-credor" onchange="filtrarDividasPagas()">
+                    <option value="">Todos os credores</option>
+                </select>
+                <input type="date" id="filtro-data" onchange="filtrarDividasPagas()">
+            </div>
+            <div id="lista-dividas-pagas"></div>
+        </div>
+
+        <div class="arquivos-mensais">
+            <h2>Arquivos Mensais</h2>
+            <select id="arquivo-mes-select" onchange="carregarArquivoMensal()">
+                <option value="">Selecione um mês</option>
+            </select>
+            <div id="arquivo-mensal-content" class="arquivo-content">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+
+        <div id="retificacao-modal" class="modal">
+            <div class="modal-content">
+                <h3>Retificar Pagamento</h3>
+                <select id="motivo-retificacao">
+                    <option value="erro_pagamento">Paguei errado</option>
+                    <option value="clique_acidental">Cliquei sem querer</option>
+                    <option value="valor_incorreto">Valor incorreto</option>
+                    <option value="outro">Outro motivo</option>
+                </select>
+                <textarea id="descricao-retificacao" placeholder="Detalhes adicionais..."></textarea>
+                <div class="modal-buttons">
+                    <button onclick="confirmarRetificacao()">Confirmar</button>
+                    <button onclick="fecharModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-import-container">
+            <button onclick="exportarXLSX()">
+    <i class="fas fa-file-export"></i>
+    Exportar Excel
+</button>
+            <button onclick="importarXLSX()">
+                <i class="fas fa-file-import"></i>
+                Importar Excel
+            </button>
+            <button onclick="exportarModeloVazio()">
+                <i class="fas fa-file-alt"></i>
+                Modelo Vazio
+            </button>
+        </div>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
